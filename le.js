@@ -4,41 +4,45 @@
 
 /* ---------- Enrol bar ----------
 
-   home.js shows its bar from the first paint on desktop and as soon as
-   the hero button leaves on a phone. This page wants fewer buttons on
-   screen at once, so the bar uses its own attribute (data-le-sticky,
-   which home.js ignores) and comes in only when all of these hold:
+   The bar uses its own attribute (data-le-sticky, which home.js ignores)
+   and follows the scroll direction:
 
-     - the visitor has scrolled at all,
-     - the hero's Enroll button is off screen,
-     - no other Enroll button on the page is on screen.
+     - scrolling down, once the hero's Enroll button is off screen, it
+       comes in and stays for as long as the visitor keeps going down;
+     - scrolling up, it slides and fades away;
+     - back up at the hero, where that button is in view, it stays hidden.
 
-   So there is never more than one Enroll in view, besides the nav's on
-   desktop (le.css hides that one on phones). */
+   A few pixels of travel are ignored, so a finger resting on the screen
+   or a trackpad's jitter does not flicker it. */
 (function () {
   const bar = document.querySelector('[data-le-sticky]');
   if (!bar) return;
-  if (!('IntersectionObserver' in window)) { bar.classList.add('is-in'); return; }
 
-  const ctas = [...document.querySelectorAll('main [data-buy]')];
-  const visible = new Set();
-  let scrolled = window.scrollY > 0;
+  const heroCta = document.querySelector('.lp-hero-copy .lp-cta');
 
-  function update() {
-    bar.classList.toggle('is-in', scrolled && visible.size === 0);
+  // Read on each scroll rather than kept by an observer, so it is never a
+  // frame behind the scroll position it is compared with.
+  function heroInView() {
+    if (!heroCta) return false;
+    const r = heroCta.getBoundingClientRect();
+    return r.bottom > 0 && r.top < window.innerHeight;
   }
 
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach((e) => (e.isIntersecting ? visible.add(e.target) : visible.delete(e.target)));
-    update();
-  }, { rootMargin: '0px 0px -40px 0px' });
-  ctas.forEach((el) => io.observe(el));
+  const THRESHOLD = 6;
+  let lastY = window.scrollY;
 
-  window.addEventListener('scroll', () => {
-    if (scrolled) return;
-    scrolled = true;
-    update();
-  }, { passive: true });
+  // Cheap enough to run on every scroll event, which browsers already
+  // deliver at most once a frame.
+  function onScroll() {
+    const y = window.scrollY;
+    if (heroInView()) { bar.classList.remove('is-in'); lastY = y; return; }
+    const dy = y - lastY;
+    if (Math.abs(dy) < THRESHOLD) return;
+    lastY = y;
+    bar.classList.toggle('is-in', dy > 0);
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
 })();
 
 /* ---------- Voice note ----------

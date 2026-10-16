@@ -382,3 +382,20 @@
 @media (max-width: 860px) {
   main .lp-cta.lp-cta-sm { width: 100%; max-width: none; align-self: stretch; }
 }
+
+/* ---------- Hero: bigger photo, bigger first button ----------
+   The cut-out is wider than tall now (cropped at the waist), so in
+   home.css's square box it was letterboxed down. The box follows the
+   photo's shape and the photo column gets more of the row. */
+@media (min-width: 861px) {
+  .lp-hero-in { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .lp-hero-media { aspect-ratio: 500 / 390; }
+  .le-buy .lp-cta { padding: 19px 46px; font-size: 19px; }
+}
+@media (max-width: 860px) {
+  .lp-hero-media { aspect-ratio: 500 / 350; max-width: 520px; }
+}
+
+/* The bar fades as well as slides when it hides on an upward scroll. */
+.lp-sticky[data-le-sticky] { opacity: 0; transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.25, 1), opacity 0.3s ease; }
+.lp-sticky[data-le-sticky].is-in { opacity: 1; }
